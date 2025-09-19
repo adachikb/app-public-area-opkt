@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <!-- <meta charset="SHIFT_JIS" /> -->
+    <title>SSO Bridge API 簡易ドライバー</title>
+</head>
+<body>
+<h1>SSO Bridge API テストフォーム</h1>
+<form id="ssoForm" method="post" action="https://opkt.aioinissaydowa.co.jp/opkaduser/oauth2/sso-gateway">
+    <label for="access_token">Access Token:</label><br />
+    <textarea id="access_token" name="access_token" required
+        style="width: 100%; min-height: 100px; box-sizing: border-box; resize: none;"
+        oninput="autoResize(this)"></textarea><br /><br />
+
+    <label for="id_token">ID Token:</label><br />
+    <textarea id="id_token" name="id_token" required
+        style="width: 100%; min-height: 100px; box-sizing: border-box; resize: none;"
+        oninput="autoResize(this)"></textarea><br /><br />
+
+    <button type="submit">送信</button>
+</form>
+
+    <div id="result" style="margin-top:20px; color: red;"></div>
+<!--
+<script>
+    document.getElementById('ssoForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const accessToken = form.access_token.value;
+        const idToken = form.id_token.value;
+
+        // URLSearchParamsでエンコード
+        const params = new URLSearchParams();
+        params.append('access_token', accessToken);
+        params.append('id_token', idToken);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: params.toString(),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (response.redirected) {
+                document.getElementById('result').style.color = 'green';
+                document.getElementById('result').textContent = 'リダイレクトされました: ' + response.url;
+                // window.location.href = response.url; // 必要なら自動遷移
+            } else if (response.ok) {
+                return response.text().then(text => {
+                    document.getElementById('result').style.color = 'green';
+                    document.getElementById('result').textContent = '正常に処理されました。';
+                });
+            } else {
+                return response.text().then(text => {
+                    document.getElementById('result').style.color = 'red';
+                    document.getElementById('result').textContent = 'エラー: ' + text;
+                });
+            }
+        })
+        .catch(error => {
+            document.getElementById('result').style.color = 'red';
+            document.getElementById('result').textContent = '通信エラー: ' + error;
+        });
+    });
+</script>
+ -->
+</body>
+</html>

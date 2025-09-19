@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>OAuth2 認可コードフロードライバー</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  label { display: block; margin-top: 10px; }
+  input[type=text], input[type=url], textarea { width: 100%; padding: 6px; font-size: 1em; }
+  button { margin-top: 15px; padding: 10px 20px; font-size: 1em; }
+  .small { font-size: 0.9em; color: #555; }
+  .output { background: #f0f0f0; padding: 10px; margin-top: 10px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<h2>OAuth2 認可コードフロー 開始URLジェネレーター</h2>
+
+<form id="authForm" action="https://opkt.ms-ins.com/opkmsuser/oauth2/authorization" method="GET" target="_blank">
+  <label>
+    Response Type:
+    <input type="text" name="response_type" value="code" required />
+  </label>
+  <label>
+    Client ID(MS:141529707203 AD:143113477429):
+    <input type="text" name="client_id" value="141529707203" required />
+  </label>
+  <label>
+    Redirect URI(MS:...redirection/351612750779107 AD:...redirection/356429323897976):
+    <input type="url" name="redirect_uri" value="https://api.authlete.com/api/mock/redirection/351612750779107" required />
+  </label>
+  <label>
+    Scope (スペース区切り):
+    <input type="text" name="scope" value="openid contractinfo.get offline_access" />
+  </label>
+  <label>
+    Prompt:
+    <input type="text" name="prompt" value="consent" />
+  </label>
+
+  <label>
+    Code Verifier (自動生成されます):
+    <textarea id="code_verifier" rows="2" readonly></textarea>
+    <small class="small">このcode_verifierはPKCEの検証に使います。必ず保存してください。</small>
+  </label>
+
+  <input type="hidden" name="code_challenge" id="code_challenge" />
+  <input type="hidden" name="code_challenge_method" value="S256" />
+
+  <label>
+    State:
+    <input type="text" name="state" id="state" required />
+  </label>
+  <label>
+    Nonce:
+    <input type="text" name="nonce" id="nonce" required />
+  </label>
+
+  <button type="button" id="generateBtn">code_verifier / code_challenge / state / nonce を生成</button>
+  <button type="submit">認可リクエスト送信 (新しいタブで開く)</button>
+</form>
+
+<script>
+// ランダムな文字列を生成（code_verifier用、43～128文字、URLセーフBase64）
+function generateRandomString(length) {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  let result = '';
+  const cryptoObj = window.crypto || window.msCrypto;
+  const randomValues = new Uint8Array(length);
+  cryptoObj.getRandomValues(randomValues);
+  for (let i = 0; i < length; i++) {
+    result += charset.charAt(randomValues[i] % charset.length);
+  }
+  return result;
+}
+
+// SHA-256ハッシュをBase64 URLエンコードで返す
+async function sha256base64url(str) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const base64 = btoa(String.fromCharCode(...hashArray))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return base64;
+}
+
+async function generateAll() {
+  const codeVerifier = generateRandomString(64); // 43～128文字推奨
+  document.getElementById('code_verifier').value = codeVerifier;
+  const codeChallenge = await sha256base64url(codeVerifier);
+  document.getElementById('code_challenge').value = codeChallenge;
+
+  // state と nonce はランダム文字列（ここは16文字）
+  const state = generateRandomString(16);
+  const nonce = generateRandomString(16);
+  document.getElementById('state').value = state;
+  document.getElementById('nonce').value = nonce;
+}
+
+document.getElementById('generateBtn').addEventListener('click', () => {
+  generateAll().catch(console.error);
+});
+
+// ページロード時に自動生成（任意）
+window.addEventListener('load', () => {
+
+  // クライアントIDとリダイレクトURIの要素取得
+  const clientIdInput = document.querySelector('input[name="client_id"]');
+  const redirectUriInput = document.querySelector('input[name="redirect_uri"]');
+
+  // 初期値設定例
+  clientIdInput.value = '141529707203';
+  redirectUriInput.value = 'https://adachikb.github.io/app-public-area-test/provider/callback/callback.html';
+
+  // PKCEなどの値も生成
+  generateAll().catch(console.error);
+});
+</script>
+
+</body>
+</html>

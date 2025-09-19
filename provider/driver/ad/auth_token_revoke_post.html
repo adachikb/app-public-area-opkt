@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <!-- <meta charset="SHIFT_JIS" /> -->
+    <title>TOKEN REVOKE API 簡易ドライバー</title>
+</head>
+<body>
+    <h1>TOKEN REVOKE API テストフォーム</h1>
+    <form id="revokeTokenForm" method="post" action="https://opkt.aioinissaydowa.co.jp/opkaduser/oauth2/revoke">
+
+        <label for="token">token:</label><br />
+        <textarea id="token" name="token" required
+            style="width: 100%; min-height: 100px; box-sizing: border-box; resize: none;"
+            oninput="autoResize(this)"></textarea><br /><br />
+
+        <label for="token_type_hint">token_type_hint:</label><br />
+        <input type="text" id="token_type_hint" name="token_type_hint" value="access_token" required style="width: 300px;" /><br /><br />
+
+        <label for="client_id">client_id(MS:141529707203 AD:143113477429):</label><br />
+        <input type="text" id="client_id" name="client_id" value="141529707203" required style="width: 300px;" /><br /><br />
+
+        <label for="client_secret">client_secret(MS:CpH5ZHs...E13cQQ AD:gdoygZ...RratQw):</label><br />
+        <input type="text" id="client_secret" name="client_secret" value="" required style="width: 300px;" /><br /><br />
+
+        <button type="submit">送信</button>
+    </form>
+
+    <div id="result" style="margin-top:20px; color: red;"></div>
+<script>
+    document.getElementById('revokeTokenForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const token = form.token.value;
+        const token_type_hint = form.token_type_hint.value;
+        const client_id = form.client_id.value;
+        const client_secret = form.client_secret.value;
+
+        // URLSearchParamsでエンコード
+        const params = new URLSearchParams();
+        params.append('token', token);
+        params.append('token_type_hint', token_type_hint);
+        params.append('client_id', client_id);
+        params.append('client_secret', client_secret);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: params.toString(),
+            credentials: 'omit'
+//            credentials: 'include'
+        })
+        .then(response => {
+            if (response.redirected) {
+                document.getElementById('result').style.color = 'green';
+                document.getElementById('result').textContent = 'リダイレクトされました: ' + response.url;
+                // window.location.href = response.url; // 必要なら自動遷移
+            } else if (response.ok) {
+                return response.text().then(text => {
+                    document.getElementById('result').style.color = 'green';
+                    document.getElementById('result').textContent = '正常:' + text;
+                });
+            } else {
+                return response.text().then(text => {
+                    document.getElementById('result').style.color = 'red';
+                    document.getElementById('result').textContent = 'エラー: ' + text;
+                });
+            }
+        })
+        .catch(error => {
+            document.getElementById('result').style.color = 'red';
+            document.getElementById('result').textContent = '通信エラー: ' + error;
+        });
+    });
+    // ページロード時に自動生成（任意）
+    window.addEventListener('load', () => {
+
+      // クライアントIDとシークレットの要素取得
+      const clientIdInput = document.querySelector('input[name="client_id"]');
+      const clientSecretInput = document.querySelector('input[name="client_secret"]');
+
+      // 初期値設定例
+      clientIdInput.value = '143113477429';
+
+      // PKCEなどの値も生成
+      // generateAll().catch(console.error);
+    });
+
+</script>
+</body>
+</html>

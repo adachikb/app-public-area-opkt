@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <!-- <meta charset="SHIFT_JIS" /> -->
+    <title>TOKEN API リフレッシュ簡易ドライバー</title>
+</head>
+<body>
+    <h1>TOKEN API リフレッシュテストフォーム</h1>
+    <form id="refreshTokenForm" method="post" action="https://opkt.aioinissaydowa.co.jp/opkaduser/oauth2/token">
+
+        <label for="grant_type">grant_type:</label><br />
+        <input type="text" id="grant_type" name="grant_type" value="refresh_token" required style="width: 300px;" /><br /><br />
+
+        <label for="refresh_token">refresh_token:</label><br />
+        <input type="text" id="refresh_token" name="refresh_token" required style="width: 300px;" /><br /><br />
+
+        <label for="client_id">client_id(MS:244417500780753 AD:246728124573909):</label><br />
+        <input type="text" id="client_id" name="client_id" value="244417500780753" required style="width: 300px;" /><br /><br />
+
+        <label for="client_secret">client_secret(MS:CpH5ZHs...E13cQQ AD:gdoygZ...RratQw):</label><br />
+        <input type="text" id="client_secret" name="client_secret" value="" required style="width: 300px;" /><br /><br />
+
+        <button type="submit">送信</button>
+    </form>
+
+    <div id="result" style="margin-top:20px; color: red;"></div>
+<script>
+    document.getElementById('refreshTokenForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const grant_type = form.grant_type.value;
+        const refresh_token = form.refresh_token.value;
+        const client_id = form.client_id.value;
+        const client_secret = form.client_secret.value;
+
+        // URLSearchParamsでエンコード
+        const params = new URLSearchParams();
+        params.append('grant_type', grant_type);
+        params.append('refresh_token', refresh_token);
+        params.append('client_id', client_id);
+        params.append('client_secret', client_secret);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: params.toString(),
+            credentials: 'omit'
+//              credentials: 'include'
+        })
+        .then(response => {
+            if (response.redirected) {
+                document.getElementById('result').style.color = 'green';
+                document.getElementById('result').textContent = 'リダイレクトされました: ' + response.url;
+                // window.location.href = response.url; // 必要なら自動遷移
+            } else if (response.ok) {
+                return response.text().then(text => {
+                    document.getElementById('result').style.color = 'green';
+                    document.getElementById('result').textContent = '正常:' + text;
+                });
+            } else {
+                return response.text().then(text => {
+                    document.getElementById('result').style.color = 'red';
+                    document.getElementById('result').textContent = 'エラー: ' + text;
+                });
+            }
+        })
+        .catch(error => {
+            document.getElementById('result').style.color = 'red';
+            document.getElementById('result').textContent = '通信エラー: ' + error;
+        });
+    });
+    // ページロード時に自動生成（任意）
+    window.addEventListener('load', () => {
+
+      // クライアントIDとシークレットの要素取得
+      const clientIdInput = document.querySelector('input[name="client_id"]');
+      const clientSecretInput = document.querySelector('input[name="client_secret"]');
+
+      // 初期値設定例
+      clientIdInput.value = '246728124573909';
+
+      // PKCEなどの値も生成
+      // generateAll().catch(console.error);
+    });
+
+</script>
+</body>
+</html>
